@@ -16,6 +16,8 @@ Else {
 
     Add-Type -AssemblyName System.Windows.Forms
     $FileBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
+    $FileBrowser.SelectedPath = "C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\"
+    $FileBrowser.Description = "Select save File folder"
 
     if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
         do {
