@@ -20,3 +20,7 @@ After that you will be greeted by an Options Menu, prompting you to Save an Empt
 ## Note:
 This Script **_will not_** create any save files for you, or give you any skins you did not previously have! You will have to manually unequip all skins, then close Rainbow, run the Script and save the Empty skin file. Same for the Equipped save file.
 Its also adviced to not use this script with save files Inbetween patches. Should a new patch come out, _especially new Seasons_, please manually renew your save files. 
+
+
+### Contact: 
+If you have any Bugreports, Ideas or anything else really feel free to text me either on discord: EstoyMejor#8008 or send me an email to [support@estoymejor.de](mailto:support@estoymejor.de)
