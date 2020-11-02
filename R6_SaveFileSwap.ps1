@@ -21,24 +21,24 @@ Else {
         do {
             $haveBackup = read-host -Prompt "`nYou appear to have a Backup, do you want to import that?`n[Y] Yes [N] No"
             if (!($haveBackup -like "Y" -or $haveBackup -like "N")) {
-                Write-Output "Bitte gültige Option wählen!`n"
+                Write-Output "Please use a valid option!`n"
             }
         } until (($haveBackup -like "Y" -or $haveBackup -like "N"))
         if ($haveBackup -like "Y") {
             Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\"
         }
         else {
-            Write-Output "Sorry, du musst das Backup.zip manuell löschen und den script neu starten!"
+            Write-Output "Sorry, you got to delete the Backup.zip yourself, for now!"
             read-host "Press ENTER to exit..."
             exit
         }
     }
     else {
-        Write-Output "Save File ordner auswählen."
-        Write-Output "Sieht normalerweise in etwa so aus: "
+        Write-Output "Select save File folder`n"
+        Write-Output "Usually it looks something like this:"
         Write-Output "C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\cab1dbc6-ff8f-4071-80fa-be72c91ff7f3\635\1.save"
-        Write-Output "Wobei die zahlen beliebig sein können. Ein R6 Save heißt jedoch immer 1.save"
-        Write-Output "Angegeben wird hier jedoch nur der _ordner_ nicht die Datei direkt!"
+        Write-Output "The numbers can be any random combination, but the file inside always looks like this: 1.save"
+        Write-Output "We only select the FOLDER. You will NOT be able to select the file itself!"
         read-host "Press ENTER to continue..."
 
         $ShowDialog = $FileBrowser.ShowDialog()
@@ -47,7 +47,7 @@ Else {
         $bool = [string]::IsNullOrEmpty($folderSave)
 
         if ($bool) {
-            Write-Output "Kein Ordner gewählt, Script implodiert! Wubbel!"
+            Write-Output "You didnt select a folder! Wubbel! Script now implodes!"
             read-host "Press ENTER to exit..."
             exit
         }
@@ -56,9 +56,9 @@ Else {
     }
 }
 do {
-    $modus = Read-Host -Prompt "[1] Speichere Ausgerüsteten Save`n[2] Speichere Leeren Save`n[3] Lade Ausgerüsteten Save`n[4] Lade Leeren Save`n[0] Settings`nModus"
+    $modus = Read-Host -Prompt "[1] Save Equipped`n[2] Save Empty`n[3] Load Equipped`n[4] Load Empty`n[0] Settings`nModus"
     if (!($modus -like 1 -or $modus -like 2 -or $modus -like 3 -or $modus -like 4 -or $modus -like 0)) {
-        Write-Output "Bitte gültige Option wählen!`n"
+        Write-Output "Please use a valid option!`n"
     }
 } until (($modus -like 1 -or $modus -like 2 -or $modus -like 3 -or $modus -like 4 -or $modus -like 0))
 
@@ -71,15 +71,15 @@ switch ($modus)
         # Settings
         0 {
             # Ask for what Settings
-            do {$settingsModus = Read-Host -Prompt "[1] Werkseinstellungen`n[2] Backup Speichern`n[3] Backup Laden`nModus"
+            do {$settingsModus = Read-Host -Prompt "[1] Factory Reset`n[2] Backup`n[3] Restore`nModus"
                     if (!($settingsModus -like 1 -or $settingsModus -like 2 -or $settingsModus -like 3)) {
-                    Write-Output "Bitte gültige Option wählen!`n"
+                    Write-Output "Please use a valid option!`n"
                     }
             } until (($settingsModus -like 1 -or $settingsModus -like 2 -or $settingsModus -like 3))
             
             switch ($settingsModus)
                 {   # Werkseinstellungen
-                    1 { $continue = read-host -Prompt "Das wird alle saves löschen!`n[Y] Yes`n[N] No`nFortfahren?";
+                    1 { $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
                         if ($continue -like "Y") {
                             Remove-Item "$PSScriptRoot\scripts\settings.txt"
                             Remove-Item "$PSScriptRoot\scripts\saves\nackt.save"
@@ -92,7 +92,7 @@ switch ($modus)
                     2 {
                         # Check if Backup exists.
                         if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
-                            $continue = read-host -Prompt "Das wird dein momentanes Backup ersetzen!`n[Y] Yes`n[N] No`nFortfahren?"
+                            $continue = read-host -Prompt "This will replace your active backup!`n[Y] Yes`n[N] No`nContinue?"
                         }
                         # If none exists, just create one.
                         else {
@@ -114,7 +114,7 @@ switch ($modus)
                     # Backup Einspielen
                     3 {
                         if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
-                            $continue = read-host -Prompt "Das wird alle saves ersetzen!`n[Y] Yes`n[N] No`nFortfahren?"
+                            $continue = read-host -Prompt "This will replace all current Saves!`n[Y] Yes`n[N] No`nContinue?"
                             if ($continue -like "Y") {
                                 Remove-Item "$PSScriptRoot\scripts\settings.txt"
                                 Remove-Item "$PSScriptRoot\scripts\saves\nackt.save"
@@ -123,7 +123,7 @@ switch ($modus)
                             }
                         }
                         else {
-                            Write-Output "Kein Backup gefunden."
+                            Write-Output "No Backup found."
                         }
                         read-host "Press ENTER to exit..."
                         exit
@@ -134,4 +134,4 @@ switch ($modus)
             }                          
         Default {Write-Output "Error. Pls Dont do this. How did you do this? WTF?"; read-host "Press ENTER to exit..."; exit}                        
     }
-read-host "Nicht vergessen beim spielstart lokaler save aus zu wählen!`nEnter to exit"
+read-host "Dont forget to use the LOCAL SAVE next time you start the game!`nEnter to exit"
