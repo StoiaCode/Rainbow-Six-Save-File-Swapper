@@ -28,4 +28,4 @@ $uploadFile = (Get-Item $uploadFileName)
 $saveFile.creationtime=$(Get-Date); $saveFile.lastwritetime=$(Get-Date)
 $uploadFile.creationtime=$(Get-Date); $uploadFile.lastwritetime=$(Get-Date)
 
-Write-Output "Save Switched. Now Active: $selectedFile"
+Write-Output "Save Switched. $selectFile is now Active. "
