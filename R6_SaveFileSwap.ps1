@@ -3,7 +3,7 @@
 # So feel free to use this script to your liking.
 # If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
 #
-# Version: 1.0
+# Version: 1.1
 
 if (!(Test-Path "$PSScriptRoot\scripts\saves" -PathType Container)) {
     New-Item -ItemType Directory -Force -Path "$PSScriptRoot\scripts\saves" | Out-Null

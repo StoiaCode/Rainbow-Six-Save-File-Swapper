@@ -1,4 +1,11 @@
-﻿param (
+﻿# Hey there!
+# This script is Created by EstoyMejor#8008 on Discord. The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0.html
+# So feel free to use this script to your liking.
+# If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
+#
+# Version: 1.1
+
+param (
 [Parameter(Mandatory=$false)][switch]$skinned
 )
 
