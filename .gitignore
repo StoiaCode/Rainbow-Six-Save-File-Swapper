@@ -1,4 +1,5 @@
 # Ignore these
 .DS_Store
 settings.txt
+Backup.zip
 saves/
