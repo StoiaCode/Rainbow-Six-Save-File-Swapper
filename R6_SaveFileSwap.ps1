@@ -5,6 +5,9 @@
 #
 # Version: 1.0
 
+if (!(Test-Path "$PSScriptRoot\scripts\saves" -PathType Container)) {
+    New-Item -ItemType Directory -Force -Path "$PSScriptRoot\scripts\saves" | Out-Null
+}
 
 if (Test-Path "$PSScriptRoot\scripts\settings.txt" -PathType leaf) {
     $folderSave = Get-Content -Path .\scripts\settings.txt
