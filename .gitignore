@@ -1,0 +1,4 @@
+# Ignore these
+.DS_Store
+settings.txt
+saves/
