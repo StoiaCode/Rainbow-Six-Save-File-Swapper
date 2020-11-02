@@ -81,9 +81,9 @@ switch ($modus)
                 {   # Werkseinstellungen
                     1 { $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
                         if ($continue -like "Y") {
-                            Remove-Item "$PSScriptRoot\scripts\settings.txt"
-                            Remove-Item "$PSScriptRoot\scripts\saves\nackt.save"
-                            Remove-Item "$PSScriptRoot\scripts\saves\skins.save"
+                            Remove-Item "$PSScriptRoot\scripts\settings.txt" -erroraction 'silentlycontinue'
+                            Remove-Item "$PSScriptRoot\scripts\saves\nackt.save" -erroraction 'silentlycontinue'
+                            Remove-Item "$PSScriptRoot\scripts\saves\skins.save" -erroraction 'silentlycontinue'
                         }
                         read-host "Press ENTER to exit..."
                         exit

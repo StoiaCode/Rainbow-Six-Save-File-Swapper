@@ -3,9 +3,9 @@
 )
 
 if ($skinned) {
-    $selectFile = "skins"
+    $selectFile = "equipped"
 } else {
-    $selectFile = "nackt"
+    $selectFile = "empty"
 }
 
 $saveFilePath = Get-Content -Path .\scripts\settings.txt
@@ -21,4 +21,4 @@ $uploadFile = (Get-Item $uploadFileName)
 $saveFile.creationtime=$(Get-Date); $saveFile.lastwritetime=$(Get-Date)
 $uploadFile.creationtime=$(Get-Date); $uploadFile.lastwritetime=$(Get-Date)
 
-Write-Output "Save getauscht. Jetzt aktiver save: $selectedFile"
+Write-Output "Save Switched. Now Active: $selectedFile"

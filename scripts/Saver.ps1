@@ -3,19 +3,22 @@
 )
 
 if ($skinned) {
-    $selectFile = "skins"
+    $selectFile = "equipped"
 } else {
-    $selectFile = "nackt"
+    $selectFile = "empty"
 }
 
-$continue = read-host -Prompt "Das wird deinen momentanen save: $selectFile ersetzen.`n[Y] Yes`n[N] No`nFortfahren?"
+$saveFilePath = Get-Content -Path .\scripts\settings.txt
+$saveFileName = "$saveFilePath\1.save"
+$continue = "Y"
+
+if (Test-Path "$PSScriptRoot\saves\$selectFile.save" -PathType Leaf) {
+    $continue = read-host -Prompt "This will replace the current save: $selectFile.`n[Y] Yes`n[N] No`nContinue?"
+}
 
 if ($continue -like "Y") {
-    $saveFilePath = Get-Content -Path .\scripts\settings.txt
-    $saveFileName = "$saveFilePath\1.save"
-
     Copy-Item "$saveFileName" -Destination "$PSScriptRoot\saves\$selectFile.save"
-    Write-Output "$selectFile wurde gespeichert."
+    Write-Output "$selectFile was saved."
 } else {
     Write-Output "Nothing Changed."
 }
