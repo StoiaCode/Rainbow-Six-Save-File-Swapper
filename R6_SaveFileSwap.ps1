@@ -32,10 +32,11 @@ Else {
             }
         } until (($haveBackup -like "Y" -or $haveBackup -like "N"))
         if ($haveBackup -like "Y") {
-            Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\"
+            Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\" -Force
         }
         else {
-            Write-Output "Sorry, you got to delete the Backup.zip yourself, for now!"
+            Rename-Item "$PSScriptRoot\Backup.zip" -NewName "Backup_old.zip"
+            Write-Output "Restart the script please!"
             read-host "Press ENTER to exit..."
             exit
         }
@@ -134,7 +135,7 @@ switch ($modus)
                                 Remove-Item "$PSScriptRoot\scripts\settings.txt" -erroraction 'silentlycontinue'
                                 Remove-Item "$PSScriptRoot\scripts\saves\nackt.save" -erroraction 'silentlycontinue'
                                 Remove-Item "$PSScriptRoot\scripts\saves\skins.save" -erroraction 'silentlycontinue'
-                                Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\"
+                                Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\" -Force
                             }
                         }
                         # Do nothing if no backup was found.
