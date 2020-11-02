@@ -116,9 +116,9 @@ switch ($modus)
                         if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
                             $continue = read-host -Prompt "This will replace all current Saves!`n[Y] Yes`n[N] No`nContinue?"
                             if ($continue -like "Y") {
-                                Remove-Item "$PSScriptRoot\scripts\settings.txt"
-                                Remove-Item "$PSScriptRoot\scripts\saves\nackt.save"
-                                Remove-Item "$PSScriptRoot\scripts\saves\skins.save"
+                                Remove-Item "$PSScriptRoot\scripts\settings.txt" -erroraction 'silentlycontinue'
+                                Remove-Item "$PSScriptRoot\scripts\saves\nackt.save" -erroraction 'silentlycontinue'
+                                Remove-Item "$PSScriptRoot\scripts\saves\skins.save" -erroraction 'silentlycontinue'
                                 Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\"
                             }
                         }
