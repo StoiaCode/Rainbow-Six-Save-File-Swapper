@@ -21,7 +21,7 @@ Else {
     Add-Type -AssemblyName System.Windows.Forms
     $FileBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
     $FileBrowser.SelectedPath = "C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\"
-    $FileBrowser.Description = "Select save File folder`nWe only select the FOLDER. You will NOT be able to select the file itself!"
+    $FileBrowser.Description = "Select save File folder.`nWe only select the FOLDER. You will NOT be able to select the file itself!"
 
     # Check for backup and import if available and wanted.
     if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
