@@ -17,6 +17,8 @@ Note: You do NOT input the FILE, you only input the **FOLDER**! You will not be 
 
 After that you will be greeted by an Options Menu, prompting you to Save an Empty save file, Save an Equipped save File, restore an Empty save file or restore an Equipped save File. 
 
+After Swapping the Save file, the next time you start the game it will prompt you if you want to use the Cloud Save or the Local Save. You have to select "Local Save" here! 
+
 ## Note:
 This Script **_will not_** create any save files for you, or give you any skins you did not previously have! You will have to manually unequip all skins, then close Rainbow, run the Script and save the Empty skin file. Same for the Equipped save file.
 Its also adviced to not use this script with save files Inbetween patches. Should a new patch come out, _especially new Seasons_, please manually renew your save files. 
