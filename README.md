@@ -4,7 +4,7 @@ This script will help you in maintaining Two different Rainbow Six Save files. O
 ## How to use:
 First you need to determine where your Rainbow Six Siege save File is. The path will look something like this: 
 C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\\[*random*]\\[*random*]\
-The easiest way to determine what folder is the correct one to start Rainbow, close it back down, and then look for a folder that has been edited at the time you closed the game. Inside that folder there *must* be a file called "1.save".  
+The easiest way to determine what folder is the correct one is to start Rainbow, close it back down, and then look for a folder that has been edited at the time you closed the game. Inside that folder there *must* be a file called "1.save".  
 
 Now Clone or Download the repository into a folder. 
 Right Click the R6_SaveFileSwap.ps1 and press "Run with powershell".
