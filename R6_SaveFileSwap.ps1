@@ -19,7 +19,7 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
-Version: 1.1
+Version: 2.0
 #>
 
 # Create saves Folder
