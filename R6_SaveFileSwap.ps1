@@ -145,8 +145,7 @@ function save-Saver ([switch]$skinned) {
         $selectFile = "empty"
     }
     
-    $saveFilePath = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
-    $saveFileName = "$saveFilePath\1.save"
+    $saveFileName = "$folderSave\1.save"
     $continue = "Y"
     
     if (Test-Path "$PSScriptRoot\saves\$selectFile.save" -PathType Leaf) {
@@ -173,8 +172,7 @@ function save-Swapper ([switch]$skinned) {
         $selectFile = "empty"
     }
     
-    $saveFilePath = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
-    $saveFileName = "$saveFilePath\1.save"
+    $saveFileName = "$folderSave\1.save"
     $uploadFileName = "$saveFileName.upload"
     
     Copy-Item "$PSScriptRoot\data\saves\$selectFile.save" -Destination $saveFileName
