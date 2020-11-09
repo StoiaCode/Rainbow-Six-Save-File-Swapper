@@ -23,14 +23,180 @@ Version: 1.1
 #>
 
 # Create saves Folder
-if (!(Test-Path "$PSScriptRoot\scripts\saves" -PathType Container)) {
-    New-Item -ItemType Directory -Force -Path "$PSScriptRoot\scripts\saves" | Out-Null
+if (!(Test-Path "$PSScriptRoot\data" -PathType Container)) {
+    New-Item -ItemType Directory -Force -Path "$PSScriptRoot\data" | Out-Null
 }
 
-#Check if we already have a folder selected, and load it.
-if (Test-Path "$PSScriptRoot\scripts\settings.txt" -PathType leaf) {
-    $folderSave = Get-Content -Path .\scripts\settings.txt
+if (!(Test-Path "$PSScriptRoot\data\saves" -PathType Container)) {
+    New-Item -ItemType Directory -Force -Path "$PSScriptRoot\data\saves" | Out-Null
 }
+
+# Open the Menu
+function Open-Menu{
+
+    # Options Menu
+    do {
+        $modus = Read-Host -Prompt "[1] Save Equipped`n[2] Save Empty`n[3] Load Equipped`n[4] Load Empty`n[0] Settings`nModus"
+        $conditionMenu = ($modus -like 1 -or $modus -like 2 -or $modus -like 3 -or $modus -like 4 -or $modus -like 0)
+        if (!$conditionMenu) {
+            Write-Output "Please use a valid option!`n"
+        }
+    } until ($conditionMenu)
+
+    # Work all options.
+    switch ($modus) {                        
+        1 { save-Saver -skinned }     # Save Skinned                   
+        2 { save-Saver }              # Save Empty         
+        3 { save-Swapper -skinned }   # Swap to Skinned
+        4 { save-Swapper }            # Swap to Empty
+        0 { Open-Settings }           # Settings                     
+        Default { Write-Output "Error. Pls Dont do this. How did you do this? WTF?"; read-host "Press ENTER to exit..."; exit }  # Should NEVER TRIGGER.                       
+    }
+}
+
+# Open the Settings Menu
+function Open-Settings {
+
+    # Settings Menu
+    do {
+        $settingsModus = Read-Host -Prompt "[1] Factory Reset`n[2] Backup`n[3] Restore`n[0] Back`nModus"
+        $conditionSettings = ($settingsModus -like 1 -or $settingsModus -like 2 -or $settingsModus -like 3 -or $settingsModus -like 0)
+        if (!$conditionSettings) {
+            Write-Output "Please use a valid option!`n"
+        }
+    } until ($conditionSettings)
+   
+    # Work all Settings.
+    switch ($settingsModus) {
+        # Factory Reset
+        1 {
+            $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
+            $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No";
+
+            if ($backup -like "Y") {
+                New-Backup
+            }
+
+            if ($continue -like "Y") {
+                Remove-Item "$PSScriptRoot\data\settings.txt" -erroraction 'silentlycontinue'
+                Remove-Item "$PSScriptRoot\data\saves\nackt.save" -erroraction 'silentlycontinue'
+                Remove-Item "$PSScriptRoot\data\saves\skins.save" -erroraction 'silentlycontinue'
+            }
+            read-host "Press ENTER to exit..."
+            exit
+        }
+        2 { New-Backup } # Backup Creating
+        3 { Restore-Backup } # Restore
+        0 { Open-Menu } # Back
+        Default { Write-Output "Error. Pls Dont do this. How did you do this? WTF?"; read-host "Press ENTER to exit..."; exit } # Should NEVER TRIGGER.
+    }
+}
+
+# Create New Backup or Update the old One
+function New-Backup {
+    # Check if Backup exists.
+    if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
+        $continue = read-host -Prompt "This will replace your active backup!`n[Y] Yes`n[N] No`nContinue?"
+    }
+    # If not, create one.
+    else {
+        $compress = @{
+            Path             = "$PSScriptRoot\data\settings.txt", "$PSScriptRoot\data\saves\"
+            CompressionLevel = "NoCompression"
+            DestinationPath  = "$PSScriptRoot\Backup.Zip"
+        }
+        Compress-Archive @compress
+    }
+            
+    # If yes, update it!
+    if ($continue -like "Y") {
+        Compress-Archive -Path "$PSScriptRoot\data\settings.txt", "$PSScriptRoot\data\saves\" -Update -DestinationPath "$PSScriptRoot\Backup.Zip"
+    }
+
+    Open-Menu
+}
+
+# Restore a Backup if it exists!
+function Restore-Backup {
+    # Check if Backup Exist, ask for Confirm.
+    if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
+        $continue = read-host -Prompt "This will import a Backup, should you have any userfiles they will be renamed to <name>_old!`n[Y] Yes`n[N] No`nContinue?"
+        if ($continue -like "Y") {
+            Rename-Item "$PSScriptRoot\data\settings.txt" -NewName "settings_old.txt" -Force -erroraction 'silentlycontinue'
+            Rename-Item "$PSScriptRoot\data\saves\empty.save" -NewName "empty_old.save" -Force -erroraction 'silentlycontinue'
+            Rename-Item "$PSScriptRoot\data\saves\equipped.save" -NewName "equipped_old.save" -Force -erroraction 'silentlycontinue'
+            Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\data\" -Force
+        }
+    }
+    # Do nothing if no backup was found.
+    else {
+        Write-Output "No Backup found."
+    }
+    read-host "Press ENTER to exit..."
+    exit
+}
+
+# Function to save our Save game
+function save-Saver ([switch]$skinned) {
+    if ($skinned) {
+        $selectFile = "equipped"
+    }
+    else {
+        $selectFile = "empty"
+    }
+    
+    $saveFilePath = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
+    $saveFileName = "$saveFilePath\1.save"
+    $continue = "Y"
+    
+    if (Test-Path "$PSScriptRoot\saves\$selectFile.save" -PathType Leaf) {
+        $continue = read-host -Prompt "This will replace the current save: $selectFile.`n[Y] Yes`n[N] No`nContinue?"
+    }
+    
+    if ($continue -like "Y") {
+        Copy-Item "$saveFileName" -Destination "$PSScriptRoot\data\saves\$selectFile.save"
+        Write-Output "$selectFile was saved."
+    }
+    else {
+        Write-Output "Nothing Changed."
+    }
+
+    Open-Menu
+}
+
+# Function to swap our Save File
+function save-Swapper ([switch]$skinned) {
+    if ($skinned) {
+        $selectFile = "equipped"
+    }
+    else {
+        $selectFile = "empty"
+    }
+    
+    $saveFilePath = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
+    $saveFileName = "$saveFilePath\1.save"
+    $uploadFileName = "$saveFileName.upload"
+    
+    Copy-Item "$PSScriptRoot\data\saves\$selectFile.save" -Destination $saveFileName
+    Copy-Item "$PSScriptRoot\data\saves\$selectFile.save" -Destination $uploadFileName
+    
+    $saveFile = (Get-Item $saveFileName)
+    $uploadFile = (Get-Item $uploadFileName)
+    
+    $saveFile.creationtime = $(Get-Date); $saveFile.lastwritetime = $(Get-Date)
+    $uploadFile.creationtime = $(Get-Date); $uploadFile.lastwritetime = $(Get-Date)
+    
+    Write-Output "Save Switched. $selectFile is now Active. "
+    read-host "Dont forget to use the LOCAL SAVE next time you start the game!"
+
+    Open-Menu
+}
+
+# Check if we already have a folder selected, and load it.
+if (Test-Path "$PSScriptRoot\data\settings.txt" -PathType leaf) {
+    $folderSave = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
+}
+
 # If not, ask for the Folder or import a Backup.
 Else {
 
@@ -42,21 +208,7 @@ Else {
 
     # Check for backup and import if available and wanted.
     if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
-        do {
-            $haveBackup = read-host -Prompt "`nYou appear to have a Backup, do you want to import that?`n[Y] Yes [N] No"
-            if (!($haveBackup -like "Y" -or $haveBackup -like "N")) {
-                Write-Output "Please use a valid option!`n"
-            }
-        } until (($haveBackup -like "Y" -or $haveBackup -like "N"))
-        if ($haveBackup -like "Y") {
-            Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\" -Force
-        }
-        else {
-            Rename-Item "$PSScriptRoot\Backup.zip" -NewName "Backup_old.zip"
-            Write-Output "Restart the script please!"
-            read-host "Press ENTER to exit..."
-            exit
-        }
+        Restore-Backup
     }
     # If no Backup is available, ask the User for the folder. 
     else {
@@ -73,103 +225,17 @@ Else {
         # Check if the Folder is right.
         If (Test-Path "$folderSave\1.save" -PathType leaf) {
             Write-Output "File found, well done!`n"
-        } else {
+        }
+        else {
             Write-Output "You didnt select the right folder! Wubbel! Script now implodes!"
             read-host "Press ENTER to exit..."
             exit
         }
 
         # Save folder path for later.
-        Set-Content -Path .\scripts\settings.txt -Value $folderSave
+        Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
     }
 }
-# Options Menu
-do {
-    $modus = Read-Host -Prompt "[1] Save Equipped`n[2] Save Empty`n[3] Load Equipped`n[4] Load Empty`n[0] Settings`nModus"
-    if (!($modus -like 1 -or $modus -like 2 -or $modus -like 3 -or $modus -like 4 -or $modus -like 0)) {
-        Write-Output "Please use a valid option!`n"
-    }
-} until (($modus -like 1 -or $modus -like 2 -or $modus -like 3 -or $modus -like 4 -or $modus -like 0))
 
-# Work all options.
-switch ($modus)                         
-    {                        
-        1 {Invoke-Expression "&'$PSScriptRoot\scripts\Saver.ps1' -skinned"}     # Save Skinned                   
-        2 {Invoke-Expression "&'$PSScriptRoot\scripts\Saver.ps1'"}              # Save Empty         
-        3 {Invoke-Expression "&'$PSScriptRoot\scripts\SkinSwapper.ps1' -skinned"} # Swap to Skinned
-        4 {Invoke-Expression "&'$PSScriptRoot\scripts\SkinSwapper.ps1'"}          # Swap to Empty
-
-        # Settings
-        0 {
-            # Settings Menu
-            do {$settingsModus = Read-Host -Prompt "[1] Factory Reset`n[2] Backup`n[3] Restore`nModus"
-                    if (!($settingsModus -like 1 -or $settingsModus -like 2 -or $settingsModus -like 3)) {
-                    Write-Output "Please use a valid option!`n"
-                    }
-            } until (($settingsModus -like 1 -or $settingsModus -like 2 -or $settingsModus -like 3))
-            
-            # Work all Settings.
-            switch ($settingsModus)
-                {   # Factory Reset
-                    1 { $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
-                        if ($continue -like "Y") {
-                            Remove-Item "$PSScriptRoot\scripts\settings.txt" -erroraction 'silentlycontinue'
-                            Remove-Item "$PSScriptRoot\scripts\saves\nackt.save" -erroraction 'silentlycontinue'
-                            Remove-Item "$PSScriptRoot\scripts\saves\skins.save" -erroraction 'silentlycontinue'
-                        }
-                        read-host "Press ENTER to exit..."
-                        exit
-                      }
-                    # Backup Creating
-                    2 {
-                        # Check if Backup exists.
-                        if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
-                            $continue = read-host -Prompt "This will replace your active backup!`n[Y] Yes`n[N] No`nContinue?"
-                        }
-                        # If not, create one.
-                        else {
-                            $compress = @{
-                                Path = "$PSScriptRoot\scripts\settings.txt", "$PSScriptRoot\scripts\saves\"
-                                CompressionLevel = "NoCompression"
-                                DestinationPath = "$PSScriptRoot\Backup.Zip"
-                            }
-                            Compress-Archive @compress
-                        }
-                        
-                        # If yes, update it!
-                        if ($continue  -like "Y") {
-                            Compress-Archive -Path "$PSScriptRoot\scripts\settings.txt", "$PSScriptRoot\scripts\saves\" -Update -DestinationPath "$PSScriptRoot\Backup.Zip"
-                        }
-                        read-host "Press ENTER to exit..."
-                        exit
-                      }
-                    # Restore
-                    3 {
-                        # Check if Backup Exist, ask for Confirm.
-                        if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
-                            $continue = read-host -Prompt "This will replace all current Saves!`n[Y] Yes`n[N] No`nContinue?"
-                            if ($continue -like "Y") {
-                                Remove-Item "$PSScriptRoot\scripts\settings.txt" -erroraction 'silentlycontinue'
-                                Remove-Item "$PSScriptRoot\scripts\saves\nackt.save" -erroraction 'silentlycontinue'
-                                Remove-Item "$PSScriptRoot\scripts\saves\skins.save" -erroraction 'silentlycontinue'
-                                Expand-Archive -Path "$PSScriptRoot\Backup.Zip" -DestinationPath "$PSScriptRoot\scripts\" -Force
-                            }
-                        }
-                        # Do nothing if no backup was found.
-                        else {
-                            Write-Output "No Backup found."
-                        }
-                        read-host "Press ENTER to exit..."
-                        exit
-                      }
-                    # Should NEVER TRIGGER.
-                    Default {Write-Output "Error. Pls Dont do this. How did you do this? WTF?"; read-host "Press ENTER to exit..."; exit}
-                }
-            
-            } 
-        #Should NEVER TRIGGER.                             
-        Default {Write-Output "Error. Pls Dont do this. How did you do this? WTF?"; read-host "Press ENTER to exit..."; exit}                        
-    }
-
-# We are done. 
-read-host "Dont forget to use the LOCAL SAVE next time you start the game!`nEnter to exit"
+# Open the Menu
+Open-Menu
