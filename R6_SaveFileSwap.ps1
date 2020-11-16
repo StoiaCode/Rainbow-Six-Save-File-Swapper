@@ -19,7 +19,7 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
-Version: 2.1
+Version: 2.2
 #>
 
 # Create saves Folder
@@ -59,8 +59,8 @@ function Open-Settings {
 
     # Settings Menu
     do {
-        $settingsModus = Read-Host -Prompt "[1] Factory Reset`n[2] Backup`n[3] Restore`n[0] Back`nModus"
-        $conditionSettings = ($settingsModus -like 1 -or $settingsModus -like 2 -or $settingsModus -like 3 -or $settingsModus -like 0)
+        $settingsModus = Read-Host -Prompt "[1] Factory Reset`n[2] Backup`n[3] Restore`n[4] Show License`n[0] Back`nModus"
+        $conditionSettings = ($settingsModus -like 1 -or $settingsModus -like 2 -or $settingsModus -like 3 -or $settingsModus -like 4 -or $settingsModus -like 0)
         if (!$conditionSettings) {
             Write-Output "Please use a valid option!`n"
         }
@@ -69,29 +69,53 @@ function Open-Settings {
     # Work all Settings.
     switch ($settingsModus) {
         # Factory Reset
-        1 {
-            $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
-            $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No`nCreate Backup?";
-
-            if ($backup -like "Y") {
-                New-Backup
-            }
-
-            if ($continue -like "Y") {
-                Remove-Item "$PSScriptRoot\data\settings.txt" -erroraction 'silentlycontinue'
-                Remove-Item "$PSScriptRoot\data\saves\empty.save" -erroraction 'silentlycontinue'
-                Remove-Item "$PSScriptRoot\data\saves\equipped.save" -erroraction 'silentlycontinue'
-                Remove-Item "$PSScriptRoot\data\saves\empty_old.save" -erroraction 'silentlycontinue'
-                Remove-Item "$PSScriptRoot\data\saves\equipped_old.save" -erroraction 'silentlycontinue'
-            }
-            read-host "Press ENTER to exit..."
-            exit
-        }
-        2 { New-Backup } # Backup Creating
+        1 { FactoryReset }   # Factory Reset
+        2 { New-Backup }     # Backup Creating
         3 { Restore-Backup } # Restore
-        0 { Open-Menu } # Back
+        4 { Get-License; Open-Menu }    # Show License
+        0 { Open-Menu }      # Back
         Default { Write-Output "Error. Pls Dont do this. How did you do this? WTF?"; read-host "Press ENTER to exit..."; exit } # Should NEVER TRIGGER.
     }
+}
+
+function FactoryReset {
+    $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
+    $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No`nCreate Backup?";
+
+    if ($backup -like "Y") {
+        New-Backup
+    }
+
+    if ($continue -like "Y") {
+        Remove-Item "$PSScriptRoot\data\settings.txt" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\data\saves\empty.save" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\data\saves\equipped.save" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\data\saves\empty_old.save" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\data\saves\equipped_old.save" -erroraction 'silentlycontinue'
+    }
+    read-host "Press ENTER to exit..."
+    exit
+}
+
+function Get-License {
+    Read-Host "`nThe script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0.html
+
+    Copyright (C) 2020 Marvin Rathge
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+    `nPress Enter to continue"
+    return
 }
 
 # Create New Backup or Update the old One
@@ -197,27 +221,27 @@ function save-Swapper ([switch]$skinned) {
 
 function Select-Folder {
     Write-Output "Select save File folder`n"
-        Write-Output "Usually it looks something like this:"
-        Write-Output "C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\cab1dbc6-ff8f-4071-80fa-be72c91ff7f3\635\1.save"
-        Write-Output "The numbers can be any random combination, but the file inside always looks like this: 1.save"
-        Write-Output "We only select the FOLDER. You will NOT be able to select the file itself!"
-        read-host "Press ENTER to continue..."
+    Write-Output "Usually it looks something like this:"
+    Write-Output "C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\cab1dbc6-ff8f-4071-80fa-be72c91ff7f3\635\1.save"
+    Write-Output "The numbers can be any random combination, but the file inside always looks like this: 1.save"
+    Write-Output "We only select the FOLDER. You will NOT be able to select the file itself!"
+    read-host "Press ENTER to continue..."
 
-        $FileBrowser.ShowDialog()
-        $folderSave = $FileBrowser.SelectedPath
+    $FileBrowser.ShowDialog()
+    $folderSave = $FileBrowser.SelectedPath
 
-        # Check if the Folder is right.
-        If (Test-Path "$folderSave\1.save" -PathType leaf) {
-            Write-Output "File found, well done!`n"
-        }
-        else {
-            Write-Output "You didnt select the right folder! Wubbel! Script now implodes!"
-            read-host "Press ENTER to exit..."
-            exit
-        }
+    # Check if the Folder is right.
+    If (Test-Path "$folderSave\1.save" -PathType leaf) {
+        Write-Output "File found, well done!`n"
+    }
+    else {
+        Write-Output "You didnt select the right folder! Wubbel! Script now implodes!"
+        read-host "Press ENTER to exit..."
+        exit
+    }
 
-        # Save folder path for later.
-        Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
+    # Save folder path for later.
+    Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
 }
 
 # Check if we already have a folder selected, and load it.
@@ -227,7 +251,6 @@ if (Test-Path "$PSScriptRoot\data\settings.txt" -PathType leaf) {
 
 # If not, ask for the Folder or import a Backup.
 Else {
-
     # File Browser Dialog stuffs
     Add-Type -AssemblyName System.Windows.Forms
     $FileBrowser = New-Object System.Windows.Forms.FolderBrowserDialog
@@ -245,6 +268,7 @@ Else {
     }
     # If no Backup is available, ask the User for the folder. 
     else {
+        Get-License
         Select-Folder
     }
 }
