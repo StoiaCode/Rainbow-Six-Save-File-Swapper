@@ -71,7 +71,7 @@ function Open-Settings {
         # Factory Reset
         1 {
             $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
-            $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No";
+            $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No`nCreate Backup?";
 
             if ($backup -like "Y") {
                 New-Backup
@@ -79,8 +79,10 @@ function Open-Settings {
 
             if ($continue -like "Y") {
                 Remove-Item "$PSScriptRoot\data\settings.txt" -erroraction 'silentlycontinue'
-                Remove-Item "$PSScriptRoot\data\saves\nackt.save" -erroraction 'silentlycontinue'
-                Remove-Item "$PSScriptRoot\data\saves\skins.save" -erroraction 'silentlycontinue'
+                Remove-Item "$PSScriptRoot\data\saves\empty.save" -erroraction 'silentlycontinue'
+                Remove-Item "$PSScriptRoot\data\saves\equipped.save" -erroraction 'silentlycontinue'
+                Remove-Item "$PSScriptRoot\data\saves\empty_old.save" -erroraction 'silentlycontinue'
+                Remove-Item "$PSScriptRoot\data\saves\equipped_old.save" -erroraction 'silentlycontinue'
             }
             read-host "Press ENTER to exit..."
             exit
@@ -94,23 +96,25 @@ function Open-Settings {
 
 # Create New Backup or Update the old One
 function New-Backup {
+    $compress = @{
+        Path             = "$PSScriptRoot\data\settings.txt", "$PSScriptRoot\data\saves\"
+        CompressionLevel = "NoCompression"
+        DestinationPath  = "$PSScriptRoot\Backup.zip"
+    }
+
     # Check if Backup exists.
     if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
         $continue = read-host -Prompt "This will replace your active backup!`n[Y] Yes`n[N] No`nContinue?"
     }
+
     # If not, create one.
     else {
-        $compress = @{
-            Path             = "$PSScriptRoot\data\settings.txt", "$PSScriptRoot\data\saves\"
-            CompressionLevel = "NoCompression"
-            DestinationPath  = "$PSScriptRoot\Backup.Zip"
-        }
         Compress-Archive @compress
     }
             
     # If yes, update it!
     if ($continue -like "Y") {
-        Compress-Archive -Path "$PSScriptRoot\data\settings.txt", "$PSScriptRoot\data\saves\" -Update -DestinationPath "$PSScriptRoot\Backup.Zip"
+        Compress-Archive @compress -Update
     }
 
     Open-Menu
@@ -131,9 +135,10 @@ function Restore-Backup {
     # Do nothing if no backup was found.
     else {
         Write-Output "No Backup found."
+        read-host "Press ENTER to exit..."
+        exit
     }
-    read-host "Press ENTER to exit..."
-    exit
+    return $continue
 }
 
 # Function to save our Save game
@@ -154,10 +159,10 @@ function save-Saver ([switch]$skinned) {
     
     if ($continue -like "Y") {
         Copy-Item "$saveFileName" -Destination "$PSScriptRoot\data\saves\$selectFile.save"
-        Write-Output "$selectFile was saved."
+        Write-Output "$selectFile was saved.`n"
     }
     else {
-        Write-Output "Nothing Changed."
+        Write-Output "Nothing Changed.`n"
     }
 
     Open-Menu
@@ -184,10 +189,35 @@ function save-Swapper ([switch]$skinned) {
     $saveFile.creationtime = $(Get-Date); $saveFile.lastwritetime = $(Get-Date)
     $uploadFile.creationtime = $(Get-Date); $uploadFile.lastwritetime = $(Get-Date)
     
-    Write-Output "Save Switched. $selectFile is now Active. "
-    read-host "Dont forget to use the LOCAL SAVE next time you start the game!"
+    Write-Output "Save Switched. $selectFile is now Active."
+    read-host "Dont forget to use the LOCAL SAVE next time you start the game!`n"
 
     Open-Menu
+}
+
+function Select-Folder {
+    Write-Output "Select save File folder`n"
+        Write-Output "Usually it looks something like this:"
+        Write-Output "C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\cab1dbc6-ff8f-4071-80fa-be72c91ff7f3\635\1.save"
+        Write-Output "The numbers can be any random combination, but the file inside always looks like this: 1.save"
+        Write-Output "We only select the FOLDER. You will NOT be able to select the file itself!"
+        read-host "Press ENTER to continue..."
+
+        $FileBrowser.ShowDialog()
+        $folderSave = $FileBrowser.SelectedPath
+
+        # Check if the Folder is right.
+        If (Test-Path "$folderSave\1.save" -PathType leaf) {
+            Write-Output "File found, well done!`n"
+        }
+        else {
+            Write-Output "You didnt select the right folder! Wubbel! Script now implodes!"
+            read-host "Press ENTER to exit..."
+            exit
+        }
+
+        # Save folder path for later.
+        Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
 }
 
 # Check if we already have a folder selected, and load it.
@@ -205,33 +235,17 @@ Else {
     $FileBrowser.Description = "Select save File folder.`nWe only select the FOLDER. You will NOT be able to select the file itself!"
 
     # Check for backup and import if available and wanted.
-    if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
-        Restore-Backup
+    if (Test-Path "$PSScriptRoot\Backup.zip" -PathType leaf) {
+        $continueReturn = Restore-Backup
+        if (!($continueReturn -like "Y")) {
+            Rename-Item "$PSScriptRoot\Backup.zip" -NewName "Backup_old.zip" -Force -erroraction 'silentlycontinue'
+            read-host "Backup renamed to <Backup_old>."
+            Select-Folder
+        }
     }
     # If no Backup is available, ask the User for the folder. 
     else {
-        Write-Output "Select save File folder`n"
-        Write-Output "Usually it looks something like this:"
-        Write-Output "C:\Program Files (x86)\Ubisoft\Ubisoft Game Launcher\savegames\cab1dbc6-ff8f-4071-80fa-be72c91ff7f3\635\1.save"
-        Write-Output "The numbers can be any random combination, but the file inside always looks like this: 1.save"
-        Write-Output "We only select the FOLDER. You will NOT be able to select the file itself!"
-        read-host "Press ENTER to continue..."
-
-        $ShowDialog = $FileBrowser.ShowDialog()
-        $folderSave = $FileBrowser.SelectedPath
-
-        # Check if the Folder is right.
-        If (Test-Path "$folderSave\1.save" -PathType leaf) {
-            Write-Output "File found, well done!`n"
-        }
-        else {
-            Write-Output "You didnt select the right folder! Wubbel! Script now implodes!"
-            read-host "Press ENTER to exit..."
-            exit
-        }
-
-        # Save folder path for later.
-        Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
+        Select-Folder
     }
 }
 
