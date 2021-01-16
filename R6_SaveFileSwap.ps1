@@ -3,7 +3,7 @@ Hey there!
 This script is Created by EstoyMejor#8008 on Discord.
 The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0.html
 
-    Copyright (C) 2020 Marvin Rathge
+    Copyright (C) 2021 Marvin Rathge
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
-Version: 2.2.1
+Version: 2.3
 #>
 
 # Create saves Folder
@@ -78,29 +78,36 @@ function Open-Settings {
     }
 }
 
-function FactoryReset {
-    $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
-    $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No`nCreate Backup?";
+function FactoryReset ([switch]$backupReturn) {
 
-    if ($backup -like "Y") {
-        New-Backup
+    # Checking if we are just returning from a Backup, if we are we skip this question. 
+    if (!$backupReturn) {
+        $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No`nCreate Backup?";
+
+        if ($backup -like "Y") {
+            New-Backup -inReset
+        }
     }
+
+    $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
 
     if ($continue -like "Y") {
         Remove-Item "$PSScriptRoot\data\settings.txt" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\data\settings_old.txt" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\empty.save" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\equipped.save" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\empty_old.save" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\equipped_old.save" -erroraction 'silentlycontinue'
     }
-    read-host "Press ENTER to exit..."
+    read-host "On ENTER the script will restart..."
+    Invoke-Expression -Command ($PSCommandPath)
     exit
 }
 
 function Get-License {
     Read-Host "`nThe script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0.html
 
-    Copyright (C) 2020 Marvin Rathge
+    Copyright (C) 2021 Marvin Rathge
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -119,7 +126,8 @@ function Get-License {
 }
 
 # Create New Backup or Update the old One
-function New-Backup {
+function New-Backup ([switch]$inReset) {
+
     $compress = @{
         Path             = "$PSScriptRoot\data\settings.txt", "$PSScriptRoot\data\saves\"
         CompressionLevel = "NoCompression"
@@ -141,11 +149,16 @@ function New-Backup {
         Compress-Archive @compress -Update
     }
 
+    # Checking if we are called during a Factory reset, if we are we go back to the Factory reset, skipping the Backup step this time. 
+    if ($inReset) {
+        FactoryReset -backupReturn
+    }
+
     Open-Menu
 }
 
 # Restore a Backup if it exists!
-function Restore-Backup {
+function Restore-Backup ([switch]$firstStart) {
     # Check if Backup Exist, ask for Confirm.
     if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
         $continue = read-host -Prompt "This will import a Backup, should you have any userfiles they will be renamed to <name>_old!`n[Y] Yes`n[N] No`nContinue?"
@@ -162,7 +175,13 @@ function Restore-Backup {
         read-host "Press ENTER to exit..."
         exit
     }
-    return $continue
+
+    if ($firstStart) {
+        return $continue
+    } else {
+        Invoke-Expression -Command ($PSCommandPath)
+        exit
+    }
 }
 
 # Function to save our Save game
@@ -251,6 +270,8 @@ function Select-Folder {
 # Check if we already have a folder selected, and load it.
 if (Test-Path "$PSScriptRoot\data\settings.txt" -PathType leaf) {
     $folderSave = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
+    $savedFiles = Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name
+    Write-Output  "Currently available saves:" $savedFiles `n
 }
 
 # If not, ask for the Folder or import a Backup.
@@ -263,10 +284,10 @@ Else {
 
     # Check for backup and import if available and wanted.
     if (Test-Path "$PSScriptRoot\Backup.zip" -PathType leaf) {
-        $continueReturn = Restore-Backup
+        $continueReturn = Restore-Backup -firstStart
         if (!($continueReturn -like "Y")) {
             Rename-Item "$PSScriptRoot\Backup.zip" -NewName "Backup_old.zip" -Force -erroraction 'silentlycontinue'
-            read-host "Backup renamed to <Backup_old>."
+            read-host "Backup renamed to <Backup_old>, ENTER to continue"
             Select-Folder
         }
     }
