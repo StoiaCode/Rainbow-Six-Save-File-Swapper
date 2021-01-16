@@ -242,6 +242,8 @@ function Select-Folder {
 
     # Save folder path for later.
     Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
+
+    Invoke-Expression -Command ($PSCommandPath)
 }
 
 # Check if we already have a folder selected, and load it.
