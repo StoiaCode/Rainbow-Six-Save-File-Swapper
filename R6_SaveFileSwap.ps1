@@ -19,7 +19,7 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
-Version: 2.2
+Version: 2.2.1
 #>
 
 # Create saves Folder
@@ -243,7 +243,9 @@ function Select-Folder {
     # Save folder path for later.
     Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
 
+    # Restarting the Script, because Powershell is stupid else and forgets the correct value for $folderSave
     Invoke-Expression -Command ($PSCommandPath)
+    exit
 }
 
 # Check if we already have a folder selected, and load it.
