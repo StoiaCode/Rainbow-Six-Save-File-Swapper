@@ -21,7 +21,7 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
 #>
 
-$Version = 2.3
+$Version = 2.4
 
 # Create saves Folder
 if (!(Test-Path "$PSScriptRoot\data" -PathType Container)) {
