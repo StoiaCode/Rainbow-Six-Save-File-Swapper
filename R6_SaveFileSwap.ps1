@@ -3,7 +3,7 @@ Hey there!
 This script is Created by EstoyMejor#8008 on Discord.
 The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0.html
 
-    Copyright (C) 2020 Marvin Rathge
+    Copyright (C) 2021 Marvin Rathge
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -19,8 +19,9 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
-Version: 2.2
 #>
+
+$Version = 2.4
 
 # Create saves Folder
 if (!(Test-Path "$PSScriptRoot\data" -PathType Container)) {
@@ -78,29 +79,36 @@ function Open-Settings {
     }
 }
 
-function FactoryReset {
-    $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
-    $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No`nCreate Backup?";
+function FactoryReset ([switch]$backupReturn) {
 
-    if ($backup -like "Y") {
-        New-Backup
+    # Checking if we are just returning from a Backup, if we are we skip this question. 
+    if (!$backupReturn) {
+        $backup = read-host -Prompt "Do you want to create a Backup before?`n[Y] Yes`n[N] No`nCreate Backup?";
+
+        if ($backup -like "Y") {
+            New-Backup -inReset
+        }
     }
+
+    $continue = read-host -Prompt "This will delete EVERYTHING!`n[Y] Yes`n[N] No`nContinue?";
 
     if ($continue -like "Y") {
         Remove-Item "$PSScriptRoot\data\settings.txt" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\data\settings_old.txt" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\empty.save" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\equipped.save" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\empty_old.save" -erroraction 'silentlycontinue'
         Remove-Item "$PSScriptRoot\data\saves\equipped_old.save" -erroraction 'silentlycontinue'
     }
-    read-host "Press ENTER to exit..."
+    read-host "On ENTER the script will restart..."
+    Invoke-Expression -Command ($PSCommandPath)
     exit
 }
 
 function Get-License {
     Read-Host "`nThe script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0.html
 
-    Copyright (C) 2020 Marvin Rathge
+    Copyright (C) 2021 Marvin Rathge
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -119,7 +127,8 @@ function Get-License {
 }
 
 # Create New Backup or Update the old One
-function New-Backup {
+function New-Backup ([switch]$inReset) {
+
     $compress = @{
         Path             = "$PSScriptRoot\data\settings.txt", "$PSScriptRoot\data\saves\"
         CompressionLevel = "NoCompression"
@@ -141,11 +150,16 @@ function New-Backup {
         Compress-Archive @compress -Update
     }
 
+    # Checking if we are called during a Factory reset, if we are we go back to the Factory reset, skipping the Backup step this time. 
+    if ($inReset) {
+        FactoryReset -backupReturn
+    }
+
     Open-Menu
 }
 
 # Restore a Backup if it exists!
-function Restore-Backup {
+function Restore-Backup ([switch]$firstStart) {
     # Check if Backup Exist, ask for Confirm.
     if (Test-Path "$PSScriptRoot\Backup.Zip" -PathType leaf) {
         $continue = read-host -Prompt "This will import a Backup, should you have any userfiles they will be renamed to <name>_old!`n[Y] Yes`n[N] No`nContinue?"
@@ -162,7 +176,13 @@ function Restore-Backup {
         read-host "Press ENTER to exit..."
         exit
     }
-    return $continue
+
+    if ($firstStart) {
+        return $continue
+    } else {
+        Invoke-Expression -Command ($PSCommandPath)
+        exit
+    }
 }
 
 # Function to save our Save game
@@ -242,6 +262,10 @@ function Select-Folder {
 
     # Save folder path for later.
     Set-Content -Path "$PSScriptRoot\data\settings.txt" -Value $folderSave
+
+    # Restarting the Script, because Powershell is stupid else and forgets the correct value for $folderSave
+    Invoke-Expression -Command ($PSCommandPath)
+    exit
 }
 
 # Check if we already have a folder selected, and load it.
@@ -259,10 +283,10 @@ Else {
 
     # Check for backup and import if available and wanted.
     if (Test-Path "$PSScriptRoot\Backup.zip" -PathType leaf) {
-        $continueReturn = Restore-Backup
+        $continueReturn = Restore-Backup -firstStart
         if (!($continueReturn -like "Y")) {
             Rename-Item "$PSScriptRoot\Backup.zip" -NewName "Backup_old.zip" -Force -erroraction 'silentlycontinue'
-            read-host "Backup renamed to <Backup_old>."
+            read-host "Backup renamed to <Backup_old>, ENTER to continue"
             Select-Folder
         }
     }
@@ -273,5 +297,45 @@ Else {
     }
 }
 
+function Update-Script {
+    $checkVersion = "https://api.github.com/repos/EstoyMejor/Rainbow-Six-Save-File-Swapper/releases/latest"
+
+    $HREF = Invoke-WebRequest -Uri $checkVersion
+    $content = $HREF.Content
+    $versionzipballLink = $content.Substring($content.IndexOf("zipball_url") + 14,81)
+    $versionName = $content.Substring($content.IndexOf("tag_name") + 11,3)
+    $regex = 'https:\/\/api\.github\.com\/repos\/EstoyMejor\/Rainbow-Six-Save-File-Swapper\/zipball\/[0-9]+\.[0-9]+(\.[0-9])*'
+    $validLink = $false
+
+    if ($versionzipballLink -match $regex -and $versionName -notmatch $Version) {
+        $validLink = $true
+        Write-Output "New version found!" $versionName
+    }
+    
+    if ($validLink) {
+        if (Test-Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -PathType Leaf) {
+            if (Test-Path "$PSScriptRoot\R6_SaveFileSwap_$Version.ps1" -PathType Leaf) {
+                $rand = Get-Random -Maximum 100
+                Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version_$rand.ps1" -Force
+            }
+            Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version.ps1" -Force
+            Write-Output "Renamed currently running version.`nFile name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
+        }
+
+        Write-Output "Downloading update..."
+        Invoke-WebRequest -Uri $versionzipballLink -OutFile "$PSScriptRoot\update.zip"
+        Expand-Archive -Path "$PSScriptRoot\update.zip" -DestinationPath "$PSScriptRoot" -Force
+        Move-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\R6_SaveFileSwap.ps1" -Destination $PSScriptRoot
+        Remove-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\" -erroraction 'silentlycontinue' -Force -Recurse
+        Remove-Item "$PSScriptRoot\update.zip" -erroraction 'silentlycontinue' -Force
+        Write-Output "Done."
+        Read-Host "Press enter to exit. Restart the script Manually please."
+        exit
+    }
+}
+
 # Open the Menu
+Update-Script
+$files = Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name
+Write-Output  "Currently available saves:" $files`n
 Open-Menu
