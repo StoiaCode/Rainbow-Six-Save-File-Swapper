@@ -309,7 +309,7 @@ function Update-Script {
 
     if ($versionzipballLink -match $regex -and $versionName -notmatch $Version) {
         $validLink = $true
-        Write-Output "New version found!" $versionName
+        Write-Output "New version found: " $versionName
     }
     
     if ($validLink) {
@@ -317,9 +317,10 @@ function Update-Script {
             if (Test-Path "$PSScriptRoot\R6_SaveFileSwap_$Version.ps1" -PathType Leaf) {
                 $rand = Get-Random -Maximum 100
                 Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version_$rand.ps1" -Force
+                Write-Output "Found a Old Version with the same name as this one, this shouldnt have happend but i just renamed it, please make sure to delete one of these files next time :)"
             }
             Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version.ps1" -Force
-            Write-Output "Renamed currently running version.`nFile name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
+            Write-Output "Renamed currently running version. File name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
         }
 
         Write-Output "Downloading update..."
@@ -328,8 +329,7 @@ function Update-Script {
         Move-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\R6_SaveFileSwap.ps1" -Destination $PSScriptRoot
         Remove-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\" -erroraction 'silentlycontinue' -Force -Recurse
         Remove-Item "$PSScriptRoot\update.zip" -erroraction 'silentlycontinue' -Force
-        Write-Output "Done."
-        Read-Host "Press enter to exit. Restart the script Manually please."
+        Read-Host "Done. Restart the script Manually please. Press enter to exit"
         exit
     }
 }
