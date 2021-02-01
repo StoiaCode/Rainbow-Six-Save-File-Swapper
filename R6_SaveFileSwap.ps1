@@ -316,15 +316,19 @@ function Update-Script {
     
     if ($validLink) {
         if (Test-Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -PathType Leaf) {
-            Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version.ps1"
+            Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version.ps1" -Force
             Write-Output "Renamed currently running version.`nFile name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
         }
 
         Write-Output "Downloading update..."
         Invoke-WebRequest -Uri $versionzipballLink -OutFile "$PSScriptRoot\update.zip"
         Expand-Archive -Path "$PSScriptRoot\update.zip" -DestinationPath "$PSScriptRoot" -Force
+        Move-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\R6_SaveFileSwap.ps1" -Destination $PSScriptRoot
+        Remove-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\update.zip" -erroraction 'silentlycontinue'
         Write-Output "Done."
         Read-Host "Press enter to exit. Restart the script Manually please."
+        exit
     } else {
         Write-Output "No new version found, or error on fetching new Version.`nIf you want to make sure, check the repo manually:`nhttps://github.com/EstoyMejor/Rainbow-Six-Save-File-Swapper/releases/latest"
     }
