@@ -271,8 +271,6 @@ function Select-Folder {
 # Check if we already have a folder selected, and load it.
 if (Test-Path "$PSScriptRoot\data\settings.txt" -PathType leaf) {
     $folderSave = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
-    $savedFiles = Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name
-    Write-Output  "Currently available saves:" $savedFiles `n
 }
 
 # If not, ask for the Folder or import a Backup.
@@ -324,8 +322,8 @@ function Update-Script {
         Invoke-WebRequest -Uri $versionzipballLink -OutFile "$PSScriptRoot\update.zip"
         Expand-Archive -Path "$PSScriptRoot\update.zip" -DestinationPath "$PSScriptRoot" -Force
         Move-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\R6_SaveFileSwap.ps1" -Destination $PSScriptRoot
-        Remove-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\" -erroraction 'silentlycontinue'
-        Remove-Item "$PSScriptRoot\update.zip" -erroraction 'silentlycontinue'
+        Remove-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\" -erroraction 'silentlycontinue' -Force -Recurse
+        Remove-Item "$PSScriptRoot\update.zip" -erroraction 'silentlycontinue' -Force
         Write-Output "Done."
         Read-Host "Press enter to exit. Restart the script Manually please."
         exit
@@ -337,3 +335,4 @@ function Update-Script {
 # Open the Menu
 Update-Script
 Open-Menu
+Write-Output  "Currently available saves:" Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name`n
