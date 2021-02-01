@@ -19,8 +19,9 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
     along with this program.  If not, see <https://www.gnu.org/licenses/>. 
 
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
-Version: 2.3
 #>
+
+$Version = 2.3
 
 # Create saves Folder
 if (!(Test-Path "$PSScriptRoot\data" -PathType Container)) {
@@ -298,5 +299,37 @@ Else {
     }
 }
 
+function Update-Script {
+    $checkVersion = "https://api.github.com/repos/EstoyMejor/Rainbow-Six-Save-File-Swapper/releases/latest"
+
+    $HREF = Invoke-WebRequest -Uri $checkVersion
+    $content = $HREF.Content
+    $versionzipballLink = $content.Substring($content.IndexOf("zipball_url") + 14,81)
+    $versionName = $content.Substring($content.IndexOf("tag_name") + 10,3)
+    $regex = 'https:\/\/api\.github\.com\/repos\/EstoyMejor\/Rainbow-Six-Save-File-Swapper\/zipball\/[0-9]+\.[0-9]+(\.[0-9])*'
+    $validLink = false
+
+    if ($versionzipballLink -match $regex -and $versionName -notmatch $Version) {
+        $validLink = true
+        Write-Output "New version found!"
+    }
+    
+    if ($validLink) {
+        if (Test-Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -PathType Leaf) {
+            Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version.ps1"
+            Write-Output "Renamed currently running version.`nFile name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
+        }
+
+        Write-Output "Downloading update..."
+        Invoke-WebRequest -Uri $versionzipballLink -OutFile "$PSScriptRoot\update.zip"
+        Expand-Archive -Path "$PSScriptRoot\update.zip" -DestinationPath "$PSScriptRoot" -Force
+        Write-Output "Done."
+        Read-Host "Press enter to exit. Restart the script Manually please."
+    } else {
+        Write-Output "No new version found, or error on fetching new Version.`nIf you want to make sure, check the repo manually:`nhttps://github.com/EstoyMejor/Rainbow-Six-Save-File-Swapper/releases/latest"
+    }
+}
+
 # Open the Menu
+Update-Script
 Open-Menu
