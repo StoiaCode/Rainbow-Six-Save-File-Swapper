@@ -303,17 +303,21 @@ function Update-Script {
     $HREF = Invoke-WebRequest -Uri $checkVersion
     $content = $HREF.Content
     $versionzipballLink = $content.Substring($content.IndexOf("zipball_url") + 14,81)
-    $versionName = $content.Substring($content.IndexOf("tag_name") + 10,3)
+    $versionName = $content.Substring($content.IndexOf("tag_name") + 11,3)
     $regex = 'https:\/\/api\.github\.com\/repos\/EstoyMejor\/Rainbow-Six-Save-File-Swapper\/zipball\/[0-9]+\.[0-9]+(\.[0-9])*'
     $validLink = $false
 
     if ($versionzipballLink -match $regex -and $versionName -notmatch $Version) {
         $validLink = $true
-        Write-Output "New version found!"
+        Write-Output "New version found!" $versionName
     }
     
     if ($validLink) {
         if (Test-Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -PathType Leaf) {
+            if (Test-Path "$PSScriptRoot\R6_SaveFileSwap_$Version.ps1" -PathType Leaf) {
+                $rand = Get-Random -Maximum 100
+                Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version_$rand.ps1" -Force
+            }
             Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version.ps1" -Force
             Write-Output "Renamed currently running version.`nFile name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
         }
@@ -327,12 +331,11 @@ function Update-Script {
         Write-Output "Done."
         Read-Host "Press enter to exit. Restart the script Manually please."
         exit
-    } else {
-        Write-Output "No new version found, or error on fetching new Version.`nIf you want to make sure, check the repo manually:`nhttps://github.com/EstoyMejor/Rainbow-Six-Save-File-Swapper/releases/latest"
     }
 }
 
 # Open the Menu
 Update-Script
+$files = Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name
+Write-Output  "Currently available saves:" $files`n
 Open-Menu
-Write-Output  "Currently available saves:" Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name`n
