@@ -307,10 +307,10 @@ function Update-Script {
     $versionzipballLink = $content.Substring($content.IndexOf("zipball_url") + 14,81)
     $versionName = $content.Substring($content.IndexOf("tag_name") + 10,3)
     $regex = 'https:\/\/api\.github\.com\/repos\/EstoyMejor\/Rainbow-Six-Save-File-Swapper\/zipball\/[0-9]+\.[0-9]+(\.[0-9])*'
-    $validLink = false
+    $validLink = $false
 
     if ($versionzipballLink -match $regex -and $versionName -notmatch $Version) {
-        $validLink = true
+        $validLink = $true
         Write-Output "New version found!"
     }
     
