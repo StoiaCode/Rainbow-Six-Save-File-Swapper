@@ -21,7 +21,7 @@ The script is shared under the GPLv3 License http://www.gnu.org/licenses/gpl-3.0
 If you encounter any bugs, or have any ideas on how to improve this script hit me up at support@estoymejor.de
 #>
 
-$Version = 2.4
+$Version = 2.5
 
 # Create saves Folder
 if (!(Test-Path "$PSScriptRoot\data" -PathType Container)) {
@@ -271,6 +271,8 @@ function Select-Folder {
 # Check if we already have a folder selected, and load it.
 if (Test-Path "$PSScriptRoot\data\settings.txt" -PathType leaf) {
     $folderSave = Get-Content -Path "$PSScriptRoot\data\settings.txt" -TotalCount 1
+    $savedFiles = Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name
+    Write-Output  "Currently available saves:" $savedFiles `n
 }
 
 # If not, ask for the Folder or import a Backup.
@@ -300,7 +302,7 @@ Else {
 function Update-Script {
     $checkVersion = "https://api.github.com/repos/EstoyMejor/Rainbow-Six-Save-File-Swapper/releases/latest"
 
-    $HREF = Invoke-WebRequest -Uri $checkVersion
+    $HREF = Invoke-WebRequest -UseBasicParsing -Uri $checkVersion
     $content = $HREF.Content
     $versionzipballLink = $content.Substring($content.IndexOf("zipball_url") + 14,81)
     $versionName = $content.Substring($content.IndexOf("tag_name") + 11,3)
@@ -309,33 +311,30 @@ function Update-Script {
 
     if ($versionzipballLink -match $regex -and $versionName -notmatch $Version) {
         $validLink = $true
-        Write-Output "New version found: " $versionName
+        Write-Output "New version found!"
     }
     
     if ($validLink) {
         if (Test-Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -PathType Leaf) {
-            if (Test-Path "$PSScriptRoot\R6_SaveFileSwap_$Version.ps1" -PathType Leaf) {
-                $rand = Get-Random -Maximum 100
-                Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version_$rand.ps1" -Force
-                Write-Output "Found a Old Version with the same name as this one, this shouldnt have happend but i just renamed it, please make sure to delete one of these files next time :)"
-            }
             Rename-Item -Path "$PSScriptRoot\R6_SaveFileSwap.ps1" -NewName "R6_SaveFileSwap_$Version.ps1" -Force
-            Write-Output "Renamed currently running version. File name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
+            Write-Output "Renamed currently running version.`nFile name is R6_SaveFileSwap_$Version.ps1, feel free to delete at your digression. "
         }
 
         Write-Output "Downloading update..."
         Invoke-WebRequest -Uri $versionzipballLink -OutFile "$PSScriptRoot\update.zip"
         Expand-Archive -Path "$PSScriptRoot\update.zip" -DestinationPath "$PSScriptRoot" -Force
-        Move-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\R6_SaveFileSwap.ps1" -Destination $PSScriptRoot
-        Remove-Item "$PSScriptRoot\EstoyMejor-Rainbow-Six-Save-File-Swapper-[a-zA-Z0-9]*\" -erroraction 'silentlycontinue' -Force -Recurse
-        Remove-Item "$PSScriptRoot\update.zip" -erroraction 'silentlycontinue' -Force
-        Read-Host "Done. Restart the script Manually please. Press enter to exit"
+        Remove-Item -Path "$PSScriptRoot\update.zip"
+        $GetUpdatePathFile = Get-ChildItem $PSScriptRoot -Filter R6_SaveFileSwap.ps1 -Recurse | ForEach-Object { $_.FullName }
+        $GetUpdatePathFolder = $GetUpdatePathFile -replace "\\R6_SaveFileSwap.ps1"
+        Move-Item -Path $GetUpdatePathFile -Destination $PSScriptRoot
+        Remove-Item -Path $GetUpdatePathFolder -Recurse
+        Read-Host "Done.`n`nPress enter to exit. Restart the script Manually please"
         exit
+    } else {
+        Write-Output "No new version found, or error on fetching new Version.`nIf you want to make sure, check the repo manually:`nhttps://github.com/EstoyMejor/Rainbow-Six-Save-File-Swapper/releases/latest"
     }
 }
 
 # Open the Menu
 Update-Script
-$files = Get-ChildItem -Path "$PSScriptRoot\data\saves\" -Name
-Write-Output  "Currently available saves:" $files`n
 Open-Menu
